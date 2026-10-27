@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>503 Server Not Connected — Connection Lost</title>
+  <meta name="description" content="Aesthetic and interactive Server Not Connected error page with live network diagnostic, reconnect simulator, and offline mini-game.">
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient Grid & Canvas Background -->
+  <canvas id="matrix-canvas"></canvas>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <!-- Top Status Bar -->
+  <header class="status-navbar">
+    <div class="server-badge">
+      <span class="status-indicator-dot disconnected"></span>
+      <span class="server-badge-text">GATEWAY_TIMEOUT :: 503</span>
+    </div>
+    
+    <div class="nav-right">
+      <div class="ping-pill">
+        <i class="ph ph-wifi-slash"></i>
+        <span id="pingValue">Ping: Timeout</span>
+      </div>
+      <button class="sound-toggle" id="audioToggle" title="Toggle Sound FX">
+        <i class="ph ph-speaker-high" id="soundIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Error Container -->
+  <main class="error-container">
+
+    <!-- Radar / Disconnected Hologram Visual -->
+    <div class="radar-box">
+      <div class="radar-circle radar-c3"></div>
+      <div class="radar-circle radar-c2"></div>
+      <div class="radar-circle radar-c1"></div>
+      <div class="radar-sweep"></div>
+      
+      <!-- Central Server Icon Box -->
+      <div class="server-core-icon" id="serverCore">
+        <i class="ph ph-cloud-slash"></i>
+        <div class="core-warning-badge">!</div>
+      </div>
+    </div>
+
+    <!-- Error Messaging -->
+    <div class="error-text-group">
+      <div class="error-code-badge">
+        <i class="ph ph-warning-octagon"></i>
+        <span>ERR_CONNECTION_REFUSED</span>
+      </div>
+      <h1 class="error-title">Server Not Connected</h1>
+      <p class="error-desc">
+        We can't establish a link with <span class="highlight-domain">cluster-primary.internal</span>.
+        The host might be rebooting, experiencing high packet drops, or unreachable.
+      </p>
+    </div>
+
+    <!-- Action Bar & Reconnection Controls -->
+    <div class="actions-wrapper">
+      <button class="btn-reconnect" id="reconnectBtn">
+        <i class="ph ph-arrow-counter-clockwise" id="retryIcon"></i>
+        <span id="retryBtnText">Retry Connection</span>
+      </button>
+
+      <button class="btn-secondary" id="toggleTerminalBtn">
+        <i class="ph ph-terminal-window"></i>
+        <span>Live Diagnostics</span>
+      </button>
+
+      <button class="btn-secondary" id="toggleGameBtn">
+        <i class="ph ph-game-controller"></i>
+        <span>Offline Arcade</span>
+      </button>
+    </div>
+
+    <!-- Auto-retry Countdown Banner -->
+    <div class="auto-retry-bar">
+      <span>Auto-reconnecting in <strong id="countdownTimer">15</strong>s</span>
+      <div class="progress-track">
+        <div class="progress-bar" id="autoRetryProgress"></div>
+      </div>
+    </div>
+
+    <!-- Diagnostic Terminal Box (Expandable) -->
+    <div class="terminal-panel" id="terminalPanel">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="terminal-title">diagnostics://host-ping-trace</div>
+        <div class="terminal-actions">
+          <button class="terminal-action-btn" id="runDiagBtn" title="Run Traceroute">
+            <i class="ph ph-play"></i> Run Test
+          </button>
+          <button class="terminal-action-btn" id="copyLogsBtn" title="Copy Log">
+            <i class="ph ph-copy"></i> Copy
+          </button>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminalOutput">
+        <p class="log-line text-muted">[00:00:01] Initializing network socket probe...</p>
+        <p class="log-line text-muted">[00:00:02] Target address resolved to 104.21.72.19:443</p>
+        <p class="log-line text-warning">[00:00:04] SYN packet sent -> No ACK received (Timeout after 3000ms)</p>
+        <p class="log-line text-danger">[00:00:07] [CRITICAL] Connection refused by peer cluster node.</p>
+        <p class="log-line text-accent active-prompt">❯ Host state: UNREACHABLE <span class="blink-cursor">_</span></p>
+      </div>
+    </div>
+
+    <!-- Interactive Offline Arcade Game Panel (Hidden by default, expandable) -->
+    <div class="game-panel" id="gamePanel">
+      <div class="game-header">
+        <div class="game-info">
+          <span class="tag"><i class="ph ph-lightning"></i> Server Packet Dodger</span>
+          <span class="score-display">Score: <strong id="gameScore">0</strong></span>
+        </div>
+        <button class="close-game-btn" id="closeGameBtn">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="game-canvas-wrapper">
+        <canvas id="gameCanvas" width="600" height="240"></canvas>
+        <div class="game-overlay" id="gameOverOverlay">
+          <h3>Packet Dropped!</h3>
+          <p>Score: <span id="finalScore">0</span></p>
+          <button class="btn-reconnect" id="restartGameBtn">
+            <i class="ph ph-play"></i> Play Again
+          </button>
+        </div>
+      </div>
+      <div class="game-footer">
+        <span>Use <kbd>←</kbd> <kbd>→</kbd> or Mouse / Touch to dodge offline dropped packets!</span>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+      <i class="ph ph-info toast-icon" id="toastIcon"></i>
+      <span id="toastMsg">Diagnostics completed</span>
+    </div>
+
+  </main>
+
+  <!-- Clean Minimalist Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="#" class="footer-link"><i class="ph ph-lifebuoy"></i> Support Desk</a>
+      <a href="#" class="footer-link"><i class="ph ph-broadcast"></i> System Status</a>
+      <a href="#" class="footer-link"><i class="ph ph-shield-check"></i> Cloudflare Edge</a>
+    </div>
+    <div class="footer-id">RAY_ID: <span id="rayId">9c482e1a89b02f4</span></div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
